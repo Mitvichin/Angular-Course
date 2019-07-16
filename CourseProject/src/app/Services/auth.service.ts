@@ -72,6 +72,7 @@ export class AuthService {
     if (!userData) {
       return;
     }
+    
     const loadedUser = new User(
       userData.email, 
       userData.id, 

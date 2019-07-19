@@ -3,6 +3,9 @@ import { ActivatedRoute, Params, Route, Router } from '@angular/router';
 import { FormGroup, FormControl, FormArray, Validators } from '@angular/forms';
 import { RecipeService } from 'src/app/Services/recipe.service';
 import { Recipe } from '../recipe.model';
+import * as fromApp from '../../store/app.reducer';
+import { Store } from '@ngrx/store';
+import { map, switchMap } from 'rxjs/operators';
 
 @Component({
   selector: 'app-recipe-edit',
@@ -14,14 +17,24 @@ export class RecipeEditComponent implements OnInit {
   editMode = false;
   recipeForm: FormGroup;
 
-  constructor(private route: ActivatedRoute, private recipeService: RecipeService, private router: Router) { }
+  constructor(private route: ActivatedRoute, private recipeService: RecipeService, private router: Router, private store: Store<fromApp.AppState>) { }
 
   ngOnInit() {
-    this.route.params.subscribe((params: Params) => {
-      this.id = +params['id'];
-      this.editMode = params['id'] != null;
-      this.initForm();
-    });
+    this.route.params.pipe(map(params => {
+      return +params['id'];
+    }),
+      switchMap(id => {
+        this.id = id;
+        this.editMode = this.id != null
+        return this.store.select('recipes');
+      })).subscribe(state => {
+        this.initForm(state.recipes[this.id]);
+      })
+    // .subscribe((params: Params) => {
+    //   this.id = +params['id'];
+    //   this.editMode = params['id'] != null;
+    //   this.initForm();
+    // });
   }
 
   onSubmit() {
@@ -35,12 +48,12 @@ export class RecipeEditComponent implements OnInit {
     this.onCancel();
   }
 
-  private initForm() {
+  private initForm(selectedRecipe?: Recipe) {
     let recipe = new Recipe('', '', '', null);
     let recipeIngredients = new FormArray([]);
 
     if (this.editMode) {
-      recipe = this.recipeService.getRecipe(this.id);
+      recipe = selectedRecipe;
       if (recipe['ingredients']) {
         recipe.ingredients.forEach(ing => {
           recipeIngredients.push(
@@ -72,12 +85,12 @@ export class RecipeEditComponent implements OnInit {
     return (<FormArray>this.recipeForm.get('ingredients')).controls;
   }
 
-  onRemoveIng(index: number){
+  onRemoveIng(index: number) {
     (<FormArray>this.recipeForm.get('ingredients')).removeAt(index);
   }
 
   onCancel() {
-    this.router.navigate(['../'], {relativeTo: this.route})
+    this.router.navigate(['../'], { relativeTo: this.route })
   }
 
 }

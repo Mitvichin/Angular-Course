@@ -14,18 +14,16 @@ import { map } from 'rxjs/operators';
   styleUrls: ['./recipes-list.component.scss']
 })
 export class RecipesListComponent implements OnInit, OnDestroy {
-  recipesChangedSub: Subscription;
   recipes: Observable<Recipe[]>;
   constructor(private recipeService: RecipeService, private router: Router, private route: ActivatedRoute, private store: Store<fromApp.AppState>) { }
 
   ngOnInit() {
 
-    console.log("opsa")
     this.recipes = this.store.select('recipes').pipe(map((state) =>{
       return state.recipes;
     }));
 
-    this.store.dispatch(new RecipesActions.StartGetRecipes());
+    //this.store.dispatch(new RecipesActions.StartGetRecipes());
 
     // this.recipesChangedSub = this.recipeService.recipesChanged.subscribe((recipes: Recipe[]) => {
     //   this.recipes = recipes;
@@ -39,6 +37,5 @@ export class RecipesListComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    this.recipesChangedSub.unsubscribe();
   }
 }

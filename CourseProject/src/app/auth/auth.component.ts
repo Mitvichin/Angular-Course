@@ -1,11 +1,14 @@
 import { Component, OnInit, ComponentFactoryResolver, ViewChild } from '@angular/core';
 import { NgForm } from '@angular/forms';
 import { AuthService, AuthResposeData } from '../Services/auth.service';
-import { from, Observable } from 'rxjs';
+import { Observable, from } from 'rxjs';
 import { Router } from '@angular/router';
 import { AlertComponent } from '../shared/alert/alert.component';
 import { PlaceholderDirective } from '../shared/placeholder/placeholder.directive';
 import { take } from 'rxjs/operators';
+import { Store } from '@ngrx/store';
+import * as fromApp from '../store/app.reducer';
+import * as AuthActions from './store/auth.actions';
 
 @Component({
   selector: 'app-auth',
@@ -17,7 +20,11 @@ export class AuthComponent implements OnInit {
   isLoginMode = true;
   isLoading = false;
   error: string = null;
-  constructor(private authService: AuthService, private router: Router, private compFactoryResolver: ComponentFactoryResolver) { }
+  constructor(
+    private authService: AuthService,
+    private router: Router,
+    private compFactoryResolver: ComponentFactoryResolver,
+    private store: Store<fromApp.AppState>) { }
 
   ngOnInit() {
   }
@@ -35,19 +42,20 @@ export class AuthComponent implements OnInit {
     let authObs: Observable<AuthResposeData>;
 
     if (this.isLoginMode) {
-      authObs = this.authService.logIn({ ...form.value, returnSecureToken: true });
+      //authObs = this.authService.logIn({ ...form.value, returnSecureToken: true });
+      this.store.dispatch(new AuthActions.LoginStart({...form.value}));
     } else {
       authObs = this.authService.signup({ ...form.value, returnSecureToken: true })
     }
 
-    authObs.subscribe((data) => {
-      this.isLoading = false;
-      this.router.navigate(['/recipes']);
-    }, errorMessage => {
-      this.isLoading = false;
-      this.error = errorMessage;
-      this.showError(errorMessage);
-    });
+    // authObs.subscribe((data) => {
+    //   this.isLoading = false;
+    //   this.router.navigate(['/recipes']);
+    // }, errorMessage => {
+    //   this.isLoading = false;
+    //   this.error = errorMessage;
+    //   this.showError(errorMessage);
+    // });
 
     form.reset();
   }

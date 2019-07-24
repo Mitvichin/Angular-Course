@@ -25,7 +25,6 @@ export class ShoppingListComponent implements OnInit, OnDestroy {
     // });
 
     this.ingredients = this.store.select('shoppingList').pipe(map(state => {
-      console.log(state)
       return state.ingredients;
     }));
 

@@ -1,10 +1,11 @@
 import { Action } from '@ngrx/store';
 import { User } from 'src/app/models/user';
 
-export const AUTHORIZE_SUCCESS = '[Auth] Authorize succes';
-export const AUTHORIZE_FAIL = '[Auth] Authorize fail';
 export const LOGIN_START = '[Auth] Login start';
 export const SIGNUP_START = '[Auth] Signup start';
+export const APP_REFRESH = '[Auth] App refresh';
+export const AUTHORIZE_FAIL = '[Auth] Authorize fail';
+export const AUTHORIZE_SUCCESS = '[Auth] Authorize succes';
 
 export class AuthorizeSuccess implements Action {
     readonly type = AUTHORIZE_SUCCESS;
@@ -16,6 +17,10 @@ export class AuthorizeFail implements Action {
     readonly type = AUTHORIZE_FAIL;
 
     constructor(public payload: string) { }
+}
+
+export class AppRefresh implements Action {
+    readonly type = APP_REFRESH;
 }
 
 export class LoginStart implements Action {
@@ -34,4 +39,5 @@ export type AuthActions =
     | LoginStart
     | SignupStart
     | AuthorizeFail
-    | AuthorizeSuccess;
+    | AuthorizeSuccess
+    | AppRefresh;

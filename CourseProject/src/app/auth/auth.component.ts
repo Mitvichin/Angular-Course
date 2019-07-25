@@ -1,11 +1,11 @@
-import { Component, OnInit, ComponentFactoryResolver, ViewChild } from '@angular/core';
+import { Component, OnInit, ComponentFactoryResolver, ViewChild, OnDestroy } from '@angular/core';
 import { NgForm } from '@angular/forms';
 import { AuthService, AuthResposeData } from '../Services/auth.service';
-import { Observable, from } from 'rxjs';
+import { Observable, from, Subscription } from 'rxjs';
 import { Router } from '@angular/router';
 import { AlertComponent } from '../shared/alert/alert.component';
 import { PlaceholderDirective } from '../shared/placeholder/placeholder.directive';
-import { take } from 'rxjs/operators';
+import { take, tap } from 'rxjs/operators';
 import { Store } from '@ngrx/store';
 import * as fromApp from '../store/app.reducer';
 import * as AuthActions from './store/auth.actions';
@@ -15,11 +15,13 @@ import * as AuthActions from './store/auth.actions';
   templateUrl: './auth.component.html',
   styleUrls: ['./auth.component.scss']
 })
-export class AuthComponent implements OnInit {
+export class AuthComponent implements OnInit, OnDestroy {
+
   @ViewChild(PlaceholderDirective, { static: false }) alertHost: PlaceholderDirective
   isLoginMode = true;
   isLoading = false;
   error: string = null;
+  authSub: Subscription;
   constructor(
     private authService: AuthService,
     private router: Router,
@@ -27,6 +29,13 @@ export class AuthComponent implements OnInit {
     private store: Store<fromApp.AppState>) { }
 
   ngOnInit() {
+    this.authSub = this.store.select('auth').subscribe(state => {
+      this.isLoading = state.isLoading;
+
+      if (state.error) {
+        this.showError(state.error);
+      }
+    });
   }
 
   onSwitchMode() {
@@ -39,13 +48,14 @@ export class AuthComponent implements OnInit {
     }
 
     this.isLoading = true;
-    let authObs: Observable<AuthResposeData>;
+    //let authObs: Observable<AuthResposeData>;
 
     if (this.isLoginMode) {
       //authObs = this.authService.logIn({ ...form.value, returnSecureToken: true });
-      this.store.dispatch(new AuthActions.LoginStart({...form.value}));
+      this.store.dispatch(new AuthActions.LoginStart({ ...form.value }));
     } else {
-      authObs = this.authService.signup({ ...form.value, returnSecureToken: true })
+      //authObs = this.authService.signup({ ...form.value, returnSecureToken: true })
+      this.store.dispatch(new AuthActions.SignupStart({ ...form.value }));
     }
 
     // authObs.subscribe((data) => {
@@ -76,5 +86,9 @@ export class AuthComponent implements OnInit {
       this.onHandleError();
       hostViewContainerRef.clear();
     });
+  }
+
+  ngOnDestroy(): void {
+    this.authSub.unsubscribe();
   }
 }

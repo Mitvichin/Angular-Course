@@ -7,13 +7,14 @@ import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { User } from 'src/app/models/user';
 import { of, throwError } from 'rxjs';
 import { Router } from '@angular/router';
+import { AuthService } from 'src/app/Services/auth.service';
 
 @Injectable()
 export class AuthEffects {
     private signupUrl: string = "https://www.googleapis.com/identitytoolkit/v3/relyingparty/signupNewUser?key=[API_KEY]";
     private logInUrl: string = "https://www.googleapis.com/identitytoolkit/v3/relyingparty/verifyPassword?key=[API_KEY]";
 
-    constructor(private actions$: Actions, private http: HttpClient, private router: Router) {
+    constructor(private actions$: Actions, private http: HttpClient, private router: Router, private authService: AuthService) {
         this.signupUrl = this.signupUrl.replace("[API_KEY]", environment.myApiKey);
         this.logInUrl = this.logInUrl.replace("[API_KEY]", environment.myApiKey);
     }
@@ -25,7 +26,7 @@ export class AuthEffects {
 
             return this.http.post(this.logInUrl, { ...authData.payload, returnSecureToken: true }).pipe(
                 map((data: AuthResposeData) => {
-                    return new AuthActions.AuthorizeSuccess(mapUser(data));
+                    return new AuthActions.AuthorizeSuccess(mapUser(data, this.authService));
                 }),
                 catchError((error: HttpErrorResponse) => {
                     return of(new AuthActions.AuthorizeFail(handleError(error)));
@@ -39,31 +40,41 @@ export class AuthEffects {
         switchMap((signupData: AuthActions.SignupStart) => {
             return this.http.post<AuthResposeData>(this.signupUrl, { ...signupData.payload, returnSecureToken: true }).pipe(
                 map((data: AuthResposeData) => {
-                    return new AuthActions.AuthorizeSuccess(mapUser(data));
+                    return new AuthActions.AuthorizeSuccess(mapUser(data, this.authService));
                 }),
                 catchError((error: HttpErrorResponse) => {
                     return of(new AuthActions.AuthorizeFail(handleError(error)));
                 })
             )
-        })
-    );
+        }));
 
     @Effect()
     appRefreshEffect = this.actions$.pipe(
         ofType(AuthActions.APP_REFRESH),
-        switchMap(() =>{
-            let user:User = JSON.parse(localStorage.getItem('userData'));
+        switchMap(() => {
+            let user = JSON.parse(localStorage.getItem('userData'));
+            this.authService.setAutoLogoutTimer(new Date(user._tokenExpirationDate).getTime() - new Date().getTime());
             return of(new AuthActions.AuthorizeSuccess(user));
         })
-    )
+    );
 
     @Effect({ dispatch: false })
-    authorizeEffect = this.actions$.pipe(
+    authorizeSuccRedirectEffect = this.actions$.pipe(
         ofType(AuthActions.AUTHORIZE_SUCCESS),
         tap(() => {
             this.router.navigate(['/recipes'])
         })
-    )
+    );
+
+    @Effect({ dispatch: false })
+    logoutEffect = this.actions$.pipe(
+        ofType(AuthActions.LOGOUT),
+        tap(() => {
+            localStorage.removeItem('userData');
+            this.router.navigate(['/auth']);
+            this.authService.clearAuthoLogoutTimer();
+        })
+    );
 }
 
 function handleError(errorRes: HttpErrorResponse) {
@@ -87,9 +98,29 @@ function handleError(errorRes: HttpErrorResponse) {
     return errorMsg;
 }
 
-function mapUser(data: AuthResposeData): User {
-    let expirationDate = new Date(new Date().getTime() + +data.expiresIn * 1000);
+function handleLoadedUser(authService:AuthService){
+    const loadedUser: {
+        email: string, id: string, _token: string, _tokenExpirationDate: string
+    } = JSON.parse(localStorage.getItem('userData'));
+
+    if(loadedUser){
+        const expirationDate = new Date(loadedUser._tokenExpirationDate);
+        const user = new User (loadedUser.email, loadedUser.id, loadedUser._token, expirationDate);
+
+        if(user.token){
+            authService.setAutoLogoutTimer(expirationDate.getTime() - new Date().getTime());
+            return of(new AuthActions.AuthorizeSuccess(user));
+        }
+    }
+
+    return of({type: "DUMMY"})
+}
+
+function mapUser(data: AuthResposeData, authService:AuthService): User {
+    let tokenLifeSpan = +data.expiresIn * 1000;
+    let expirationDate = new Date(new Date().getTime() + tokenLifeSpan);
     let user = new User(data.email, data.localId, data.idToken, expirationDate);
+    authService.setAutoLogoutTimer(tokenLifeSpan);
     localStorage.setItem('userData', JSON.stringify(user));
     return user;
 }

@@ -21,6 +21,10 @@ export function authReducer(state: State = initialState, action: AuthActions.Aut
             return {
                 ...state, isLoading: true, error: null
             }
+        case AuthActions.LOGOUT:
+            return {
+                ...state, user: null, isLoading: false, error: null
+            }
         case AuthActions.AUTHORIZE_SUCCESS:
             return {
                 ...state, isLoading: false, error: null, user: action.payload

@@ -1,6 +1,6 @@
 import { Component, OnInit, ComponentFactoryResolver, ViewChild, OnDestroy } from '@angular/core';
 import { NgForm } from '@angular/forms';
-import { AuthService, AuthResposeData } from '../Services/auth.service';
+import { AuthService,  } from '../Services/auth.service'; //AuthResposeData
 import { Observable, from, Subscription } from 'rxjs';
 import { Router } from '@angular/router';
 import { AlertComponent } from '../shared/alert/alert.component';
@@ -47,7 +47,7 @@ export class AuthComponent implements OnInit, OnDestroy {
       return;
     }
 
-    this.isLoading = true;
+    //this.isLoading = true;
     //let authObs: Observable<AuthResposeData>;
 
     if (this.isLoginMode) {
@@ -71,7 +71,7 @@ export class AuthComponent implements OnInit, OnDestroy {
   }
 
   onHandleError() {
-    this.error = null;
+    //this.error = null;
   }
 
   private showError(error: string) {

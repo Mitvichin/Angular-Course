@@ -6,6 +6,7 @@ export const SIGNUP_START = '[Auth] Signup start';
 export const APP_REFRESH = '[Auth] App refresh';
 export const AUTHORIZE_FAIL = '[Auth] Authorize fail';
 export const AUTHORIZE_SUCCESS = '[Auth] Authorize succes';
+export const LOGOUT = '[Auth] Logout';
 
 export class AuthorizeSuccess implements Action {
     readonly type = AUTHORIZE_SUCCESS;
@@ -35,9 +36,14 @@ export class SignupStart implements Action {
     constructor(public payload: { email: string, password: string }) { }
 }
 
+export class Logout implements Action {
+    readonly type = LOGOUT;
+}
+
 export type AuthActions =
     | LoginStart
     | SignupStart
     | AuthorizeFail
     | AuthorizeSuccess
-    | AppRefresh;
+    | AppRefresh
+    | Logout;

@@ -52,9 +52,7 @@ export class AuthEffects {
     appRefreshEffect = this.actions$.pipe(
         ofType(AuthActions.APP_REFRESH),
         switchMap(() => {
-            let user = JSON.parse(localStorage.getItem('userData'));
-            this.authService.setAutoLogoutTimer(new Date(user._tokenExpirationDate).getTime() - new Date().getTime());
-            return of(new AuthActions.AuthorizeSuccess(user));
+            return handleLoadedUser(this.authService);
         })
     );
 
@@ -62,7 +60,8 @@ export class AuthEffects {
     authorizeSuccRedirectEffect = this.actions$.pipe(
         ofType(AuthActions.AUTHORIZE_SUCCESS),
         tap(() => {
-            this.router.navigate(['/recipes'])
+            if (this.router.url === '/auth')
+                this.router.navigate(['/recipes'])
         })
     );
 
@@ -98,25 +97,25 @@ function handleError(errorRes: HttpErrorResponse) {
     return errorMsg;
 }
 
-function handleLoadedUser(authService:AuthService){
+function handleLoadedUser(authService: AuthService) {
     const loadedUser: {
         email: string, id: string, _token: string, _tokenExpirationDate: string
     } = JSON.parse(localStorage.getItem('userData'));
 
-    if(loadedUser){
+    if (loadedUser) {
         const expirationDate = new Date(loadedUser._tokenExpirationDate);
-        const user = new User (loadedUser.email, loadedUser.id, loadedUser._token, expirationDate);
+        const user = new User(loadedUser.email, loadedUser.id, loadedUser._token, expirationDate);
 
-        if(user.token){
+        if (user.token) {
             authService.setAutoLogoutTimer(expirationDate.getTime() - new Date().getTime());
             return of(new AuthActions.AuthorizeSuccess(user));
         }
     }
 
-    return of({type: "DUMMY"})
+    return of({ type: "DUMMY" })
 }
 
-function mapUser(data: AuthResposeData, authService:AuthService): User {
+function mapUser(data: AuthResposeData, authService: AuthService): User {
     let tokenLifeSpan = +data.expiresIn * 1000;
     let expirationDate = new Date(new Date().getTime() + tokenLifeSpan);
     let user = new User(data.email, data.localId, data.idToken, expirationDate);

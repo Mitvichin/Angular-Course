@@ -1,0 +1,48 @@
+{
+  "name": "custom-project",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "webpack-dev-server --inline --progress -port 8080 --config webpack.config.dev.js",
+    "build:prod": "del-cli dist && ngc -p tsconfig.aot.json && ngc -p tsconfig.aot.json && webpack --config webpack.config.prod.js --progress --profile --bail && del-cli 'src/app/**/*.js' 'src/app/**/*.ngfactory.ts' 'src/app/**/*.js.map' 'src/app/**/*.shim.ts' 'src/app/**/*.ngsummary.json' 'src/app/**/*.ngstyle.ts' 'dist/app' 'src/polyfills.ngsummary.json'",
+    "serve": "lite-server"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@angular/common": "^8.2.4",
+    "@angular/compiler": "^8.2.4",
+    "@angular/compiler-cli": "^8.2.4",
+    "@angular/core": "^8.2.4",
+    "@angular/forms": "^8.2.4",
+    "@angular/http": "^7.2.15",
+    "@angular/platform-browser": "^8.2.4",
+    "@angular/platform-browser-dynamic": "^8.2.4",
+    "@angular/platform-server": "^8.2.4",
+    "@angular/router": "^8.2.4",
+    "@angular/upgrade": "^8.2.4",
+    "core-js": "^3.2.1",
+    "rxjs": "^6.5.2",
+    "zone.js": "^0.10.2"
+  },
+  "devDependencies": {
+    "@ngtools/webpack": "^8.3.2",
+    "@types/core-js": "^2.5.2",
+    "@types/node": "^12.7.3",
+    "angular-router-loader": "^0.8.5",
+    "angular2-template-loader": "^0.6.2",
+    "awesome-typescript-loader": "^5.2.1",
+    "del-cli": "^2.0.0",
+    "html-loader": "^0.5.5",
+    "html-webpack-plugin": "^3.2.0",
+    "lite-server": "^2.5.4",
+    "raw-loader": "^3.1.0",
+    "typescript": "^3.6.2",
+    "webpack": "^4.39.3",
+    "webpack-cli": "^3.3.7",
+    "webpack-dev-server": "^3.8.0",
+    "webpack-merge": "^4.2.2"
+  }
+}
